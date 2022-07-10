@@ -4,7 +4,7 @@ import Service, { ServiceError } from '.';
 
 const NOT_FOUND_ERROR_MESSAGE = 'car not found';
 
-export default class ClassService extends Service<Car> {
+export default class CarService extends Service<Car> {
   constructor(model = new CarModel()) {
     super(model);
   }

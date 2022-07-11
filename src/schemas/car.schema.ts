@@ -9,6 +9,8 @@ const carSchema = new Schema<Car>({
   buyValue: { type: Number, required: true },
   doorsQty: { type: Number, required: true },
   seatsQty: { type: Number, required: true },
+}, {
+  versionKey: false,
 });
 
 export default carSchema;

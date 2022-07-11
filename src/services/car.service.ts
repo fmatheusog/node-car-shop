@@ -1,56 +1,41 @@
-import { Car, carSchema } from '../interfaces/CarInterface';
+import { Car } from '../interfaces/CarInterface';
 import CarModel from '../models/car.model';
-import Service, { ServiceError } from '.';
 
-const ID_LENGHT_ERROR = 'Id must have 24 hexadecimal characters';
+export default class CarService {
+  constructor(
+    private carRepository: CarModel,
+  ) {}
+  
+  async create(payload: Car): Promise<Car> {
+    const newCar = await this.carRepository.create(payload);
 
-export default class CarService extends Service<Car> {
-  constructor(model = new CarModel()) {
-    super(model);
-  }
-
-  async create(entity: Car) {
-    const validation = carSchema.safeParse(entity);
-    if (!validation.success) {
-      return { error: validation.error };
-    }
-
-    return this.model.create(entity);
-  }
-
-  async update(id: string, entity: Car): Promise<Car | ServiceError | null> {
-    if (id.length < 24) throw new Error(ID_LENGHT_ERROR);
-
-    const validation = carSchema.safeParse(entity);
-    if (!validation.success) {
-      return { error: validation.error };
-    }
-
-    const car = this.model.update(id, entity);
-
-    if (!car) return null;
-    return car;
+    return newCar;
   }
 
   async read(): Promise<Car[]> {
-    return this.model.read();
+    const allCars = await this.carRepository.read();
+
+    return allCars;
   }
 
   async readOne(id: string): Promise<Car | null> {
-    if (id.length < 24) throw new Error(ID_LENGHT_ERROR);
-    
-    const car = await this.model.readOne(id);
+    const car = await this.carRepository.readOne(id);
 
     if (!car) return null;
     return car;
   }
 
-  async delete(id: string): Promise<Car | null> {
-    if (id.length < 24) throw new Error(ID_LENGHT_ERROR);
-    
-    const car = await this.model.delete(id);
+  async update(id: string, payload: Car): Promise<Car | null> {
+    const editCar = await this.carRepository.update(id, payload);
 
-    if (!car) return null;
-    return car;
+    if (!editCar) return null;
+    return editCar;
+  }
+
+  async delete(id: string): Promise<Car | null> {
+    const deleteCar = await this.carRepository.delete(id);
+
+    if (!deleteCar) return null;
+    return deleteCar;
   }
 }

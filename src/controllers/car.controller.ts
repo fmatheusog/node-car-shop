@@ -1,100 +1,84 @@
 import { Request, Response } from 'express';
-import Controller, { RequestWithBody, ResponseError } from '.';
-import { Car } from '../interfaces/CarInterface';
 import CarService from '../services/car.service';
 
-const INTERNAL_ERROR_MSG = 'Internal error';
 const NOT_FOUND_ERROR_MSG = 'Object not found';
+const ID_LENGTH_ERROR_MSG = 'Id must have 24 hexadecimal characters';
 
-export default class CarController extends Controller<Car> {
-  constructor(protected service = new CarService()) {
-    super(service);
-  }
+export default class CarController {
+  constructor(
+    private carService: CarService,
+  ) {}
 
-  async create(
-    req: RequestWithBody<Car>,
-    res: Response<Car | ResponseError>,
-  ): Promise<Response<Car | ResponseError>> {
+  async create(req: Request, res: Response) {
     try {
       const { body } = req;
 
-      const car = await this.service.create(body);
-      if ('error' in car) {
-        return res.status(400).json(car);
-      }
+      const car = await this.carService.create(body);
       return res.status(201).json(car);
     } catch (err) {
-      return res.status(500).json({ error: INTERNAL_ERROR_MSG });
+      console.log(err);
     }
   }
 
-  async read(
-    _req: Request,
-    res: Response<Car[] | ResponseError>,
-  ): Promise<Response<Car[] | ResponseError>> {
+  async read(req: Request, res: Response) {
     try {
-      const allCars = await this.service.read();
+      const allCars = await this.carService.read();
 
       return res.status(200).json(allCars);
     } catch (err) {
-      return res.status(500).json({ error: INTERNAL_ERROR_MSG });
+      console.log(err);
     }
   }
 
-  async readOne(
-    req: Request<{ id: string; }>,
-    res: Response<Car | ResponseError | null>,
-  ): Promise<Response<Car | ResponseError | null>> {
+  async readOne(req: Request, res: Response) {
     try {
       const { id } = req.params;
 
-      const car = await this.service.readOne(id);
+      if (id.length < 24) {
+        return res.status(400).json({ error: ID_LENGTH_ERROR_MSG });
+      }
 
+      const car = await this.carService.readOne(id);
       if (!car) return res.status(404).json({ error: NOT_FOUND_ERROR_MSG });
       return res.status(200).json(car);
     } catch (err) {
-      if ((err as Error).message.includes('Id')) {
-        return res.status(400).json({ error: (err as Error).message });
-      }
-      return res.status(500).json({ error: (err as Error).message });
+      console.log(err);
     }
   }
 
-  async update(
-    req: Request<{ id: string; }>,
-    res: Response<Car | ResponseError>,
-  ): Promise<Response<Car | ResponseError>> {
+  async update(req: Request, res: Response) {
     try {
       const { id } = req.params;
+
+      if (id.length < 24) {
+        return res.status(400).json({ error: ID_LENGTH_ERROR_MSG });
+      }
+
       const { body } = req;
 
-      const car = await this.service.update(id, body);
-
-      if (!car) return res.status(404).json({ error: NOT_FOUND_ERROR_MSG });
-      return res.status(200).json(car);
+      const editCar = await this.carService.update(id, body);
+      if (!editCar) return res.status(404).json({ error: NOT_FOUND_ERROR_MSG });
+      return res.status(200).json(editCar);
     } catch (err) {
-      if ((err as Error).message.includes('Id')) {
-        return res.status(400).json({ error: (err as Error).message });
-      }
-      return res.status(500).json({ error: (err as Error).message });
+      console.log(err);
     }
   }
 
-  async delete(
-    req: Request<{ id: string; }>,
-    res: Response<Car | ResponseError>,
-  ): Promise<Response<Car | ResponseError>> {
+  async delete(req: Request, res: Response) {
     try {
       const { id } = req.params;
 
-      const car = await this.service.delete(id);
-      if (!car) return res.status(404).json({ error: NOT_FOUND_ERROR_MSG });
-      return res.status(200).json();
-    } catch (err) {
-      if ((err as Error).message.includes('Id')) {
-        return res.status(400).json({ error: (err as Error).message });
+      if (id.length < 24) {
+        return res.status(400).json({ error: ID_LENGTH_ERROR_MSG });
       }
-      return res.status(500).json({ error: (err as Error).message });
+
+      const deleteCar = await this.carService.delete(id);
+      if (!deleteCar) {
+        return res.status(404).json({ error: NOT_FOUND_ERROR_MSG });
+      }
+      return res.status(204).json(deleteCar);
+    } catch (err) {
+      console.log(err);
     }
   }
 }
